@@ -1,0 +1,10 @@
+{
+  "resource": true,
+  "name": "terraform-module",
+  "version": "0.2.1",
+  "parameterization": {
+    "name": "cloudinit-tailscale",
+    "version": "0.0.1",
+    "value": "ewogICJtb2R1bGUiOiAiZ2l0aHViLmNvbS90YWlsc2NhbGUvdGVycmFmb3JtLWNsb3VkaW5pdC10YWlsc2NhbGUiLAogICJwYWNrYWdlTmFtZSI6ICJjbG91ZGluaXQtdGFpbHNjYWxlIgp9"
+  }
+}

@@ -1,0 +1,64 @@
+schema: spec-driven
+
+context: |
+  This repository is a fully defined infrastructure-as-code repo for a Tailscale
+  environment.
+
+  Tech stack:
+  - Pulumi with Python.
+  - uv for Python package management.
+  - jaxxstorm/pedloy for deployments.
+  - Pulumi Terraform-provider support is used where needed to manage providers
+    that are not native Pulumi providers or where Terraform provider behavior is
+    required.
+
+  Repository layout:
+  - Each Pulumi program lives under `projects/`.
+  - Cloud-provider-specific programs live beneath a provider directory, such as
+    `projects/aws`.
+  - New Pulumi projects must also add the corresponding pedloy deployment YAML
+    file at the repository root.
+  - Python dependencies are managed only at the repository root with uv. Do not
+    add per-project `pyproject.toml` or `uv.lock` files; all Pulumi programs
+    share the root dependency set and root virtual environment.
+
+  Domain:
+  - The repository defines Tailscale infrastructure and related resources.
+  - Managed resources include Tailscale components such as app connectors, exit
+    nodes, subnet routers, databases, and supporting cloud infrastructure.
+
+  Conventions:
+  - Keep project-specific infrastructure changes scoped to the relevant
+    `projects/<provider>/` program unless a shared root-level dependency or
+    convention must change.
+  - Prefer Pulumi-native resources when practical, but use Pulumi's Terraform
+    provider support consistently where the existing codebase does.
+  - Keep uv dependency changes at the repository root.
+  - New Pulumi projects must rely on the root `pyproject.toml` and `uv.lock`
+    for dependencies.
+  - Keep pedloy deployment configuration in root-level YAML files and update it
+    whenever adding or renaming Pulumi projects.
+  - Prefer distinct resource files inside each Pulumi project when a project has
+    multiple resource groups. Keep `__main__.py` as the entrypoint that reads
+    config, populates shared context, imports resource modules in dependency
+    order, and exports outputs.
+  - Use a project-local `context.py` module for shared values between resource
+    files when needed. Resource modules should validate required context at
+    import time before declaring resources.
+  - Avoid defining Python functions unless they remove meaningful complexity or
+    are required by a Pulumi API such as an `Output.apply` callback.
+
+rules:
+  proposal:
+    - Call out which Pulumi project/provider directories are affected.
+    - Include dependency or provider changes explicitly when a change touches uv
+      packages or Terraform-backed providers.
+    - For new Pulumi projects, call out the required root-level pedloy YAML
+      deployment configuration.
+  tasks:
+    - Include validation steps for Pulumi previews or equivalent IaC checks when
+      implementation changes infrastructure definitions.
+    - Include a task to add or update the root-level pedloy YAML file whenever a
+      Pulumi project is added or renamed.
+    - Include resource-file organization tasks when adding new resource groups
+      to a Pulumi project.

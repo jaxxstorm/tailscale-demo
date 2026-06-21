@@ -1,0 +1,8 @@
+config:
+  aws:region: us-west-2
+  lbrlabs-aws-vpn:tailscaleIssuer: https://a1978c18-df13-4402-8a78-2fd4fe6ce296.tokens.sts.global.api.aws
+  pulumi:resourcePrefix: lbr-west
+  tailscale:api_key:
+    secure: AAABAEwqWMww/O13VH0W0++bAcMgfnh5HANYnzb1gh9XlgKLhdnEMYq/6QCR7XuwLOC87/LqN3kPwPZ6w0TRLWdZ3beMTsA+GAKzBEk6yulOwotsXigpHdsjvfw=
+  tailscale:apiKey:
+    secure: AAABAK41xfIRUR/jhi+seNkS69wH3VVb0WQzPBHnhBmmKZ/sAplM6KbM/sO/d7L9N5LDmTaI+XHkUtYkPvWN2qmSNPPD1lkT0xn2UAQSNxf3zRmrJC7jCqhuzPo=

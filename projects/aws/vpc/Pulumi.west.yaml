@@ -1,0 +1,4 @@
+config:
+  pulumi:resourcePrefix: lbr-west
+  lbrlabs-demo-aws-vpc:cidr_block: 172.16.0.0/16
+  aws:region: us-west-2

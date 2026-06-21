@@ -1,0 +1,10 @@
+name: lbrlabs-demo-aws-vpc
+description: AWS VPC definition for demo environment
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-python

@@ -1,0 +1,22 @@
+name: lbrlabs-aws-vpn
+description: Demo environment tailscale subnet routers for AWS
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-python
+packages:
+  cloudinit-tailscale:
+    source: terraform-module
+    version: 0.2.1
+    parameters:
+      - github.com/tailscale/terraform-cloudinit-tailscale
+      - cloudinit-tailscale
+  tailscale:
+    source: terraform-provider
+    version: 0.8.0
+    parameters:
+      - tailscale/tailscale

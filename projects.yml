@@ -1,0 +1,9 @@
+projects:
+  - name: lbrlabs-demo-aws-vpc
+    stacks:
+      - west
+  - name: lbrlabs-aws-vpn
+    stacks:
+      - west
+    dependsOn:
+      - lbrlabs-demo-aws-vpc

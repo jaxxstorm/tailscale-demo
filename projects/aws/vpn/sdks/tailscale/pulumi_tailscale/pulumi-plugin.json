@@ -1,0 +1,10 @@
+{
+  "resource": true,
+  "name": "terraform-provider",
+  "version": "0.8.0",
+  "parameterization": {
+    "name": "tailscale",
+    "version": "0.29.2",
+    "value": "eyJyZW1vdGUiOnsidXJsIjoicmVnaXN0cnkub3BlbnRvZnUub3JnL3RhaWxzY2FsZS90YWlsc2NhbGUiLCJ2ZXJzaW9uIjoiMC4yOS4yIn19"
+  }
+}
