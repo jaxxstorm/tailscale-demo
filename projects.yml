@@ -1,9 +1,31 @@
 projects:
-  - name: lbrlabs-demo-aws-vpc
+  - name: demo-aws-vpc
+    dir: projects/aws/vpc
     stacks:
       - west
-  - name: lbrlabs-aws-vpn
+  - name: demo-aws-vpn
+    dir: projects/aws/vpn
     stacks:
       - west
     dependsOn:
-      - lbrlabs-demo-aws-vpc
+      - demo-aws-vpc
+  - name: demo-aws-connectors
+    dir: projects/aws/connectors
+    stacks:
+      - west
+    dependsOn:
+      - demo-aws-vpc
+  - name: demo-aws-eks
+    dir: projects/aws/eks
+    stacks:
+      - west
+    dependsOn:
+      - demo-aws-vpc
+  - name: demo-aws-connectors
+    dir: projects/aws/connectors
+    stacks:
+      - west
+    dependsOn:
+      - demo-aws-vpc
+      - demo-aws-eks
+  

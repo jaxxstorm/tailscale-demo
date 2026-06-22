@@ -1,0 +1,16 @@
+name: demo-aws-connectors
+description: Demo environment Tailzero connectors for AWS
+runtime:
+  name: python
+  options:
+    toolchain: uv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: aws-python
+packages:
+  border0:
+    source: terraform-provider
+    version: 0.8.0
+    parameters:
+      - borderzero/border0

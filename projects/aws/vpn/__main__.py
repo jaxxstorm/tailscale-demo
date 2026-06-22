@@ -1,6 +1,13 @@
+import sys
+from pathlib import Path
+
 import pulumi
 import pulumi_aws as aws
 import pulumi_cloudinit_tailscale as cloudinit_tailscale
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+from components import AutoScalingEC2, AutoScalingEC2Args  # noqa: E402
 
 import context
 
@@ -15,7 +22,7 @@ CONFIG = pulumi.Config()
 PULUMI_CONFIG = pulumi.Config("pulumi")
 
 RESOURCE_PREFIX = PULUMI_CONFIG.require("resourcePrefix")
-VPC_STACK = CONFIG.get("vpcStack", "lbrlabs/lbrlabs-demo-aws-vpc/west")
+VPC_STACK = CONFIG.get("vpcStack", "lbrlabs/demo-aws-vpc/west")
 INSTANCE_TYPE = CONFIG.get("instanceType") or "t4g.nano"
 DESIRED_CAPACITY = CONFIG.get_int("desiredCapacity") or 1
 MIN_SIZE = CONFIG.get_int("minSize") or 1
@@ -48,9 +55,8 @@ vpc_id = vpc_stack.require_output("vpc_id")
 vpc_cidr_block = vpc_stack.require_output("cidr_block")
 subnet_ids = vpc_stack.require_output("private_subnet_ids")
 
-ami = None
 if AMI_ID is None:
-    ami = aws.ec2.get_ami(
+    ami_id = aws.ec2.get_ami(
         most_recent=True,
         owners=["amazon"],
         filters=[
@@ -61,9 +67,9 @@ if AMI_ID is None:
             aws.ec2.GetAmiFilterArgs(name="architecture", values=["arm64"]),
             aws.ec2.GetAmiFilterArgs(name="virtualization-type", values=["hvm"]),
         ],
-    )
-
-ami_id = AMI_ID or (ami.id if ami is not None else None)
+    ).id
+else:
+    ami_id = AMI_ID
 resource_name = f"{RESOURCE_PREFIX}-vpn-{REGION_SHORT_NAME}"
 vpn = pulumi.ComponentResource("tailscale-demo:aws:Vpn", resource_name)
 
@@ -130,82 +136,50 @@ cloudinit = cloudinit_tailscale.Module(
     track=TRACK,
     opts=pulumi.ResourceOptions(parent=vpn),
 )
+user_data = cloudinit.rendered.apply(lambda rendered: str(rendered or ""))
 
-launch_template = aws.ec2.LaunchTemplate(
-    f"{resource_name}-lt",
-    name_prefix=f"{resource_name}-",
-    image_id=ami_id,
-    instance_type=INSTANCE_TYPE,
-    iam_instance_profile=aws.ec2.LaunchTemplateIamInstanceProfileArgs(
-        name=iam.instance_profile.name,
+router_instances = AutoScalingEC2(
+    resource_name,
+    AutoScalingEC2Args(
+        ami_id=ami_id,
+        associate_public_ip_address="true",
+        desired_capacity=DESIRED_CAPACITY,
+        instance_profile_name=iam.instance_profile.name,
+        instance_type=INSTANCE_TYPE,
+        max_size=MAX_SIZE,
+        min_size=MIN_SIZE,
+        resource_name=resource_name,
+        security_group_ids=[security_group.id],
+        subnet_ids=subnet_ids,
+        tags=TAGS,
+        user_data=user_data,
     ),
-    network_interfaces=[
-        aws.ec2.LaunchTemplateNetworkInterfaceArgs(
-            associate_public_ip_address="true",
-            delete_on_termination="true",
-            security_groups=[security_group.id],
-        )
-    ],
-    user_data=cloudinit.rendered,
-    tag_specifications=[
-        aws.ec2.LaunchTemplateTagSpecificationArgs(
-            resource_type="instance",
-            tags={**TAGS, "Name": resource_name},
-        ),
-        aws.ec2.LaunchTemplateTagSpecificationArgs(
-            resource_type="volume",
-            tags={**TAGS, "Name": resource_name},
-        ),
-    ],
-    tags={**TAGS, "Name": f"{resource_name}-lt"},
     opts=pulumi.ResourceOptions(
         parent=vpn,
         depends_on=[iam.ssm_policy_attachment, identity.web_identity_policy],
     ),
 )
 
-autoscaling_group = aws.autoscaling.Group(
-    f"{resource_name}-asg",
-    desired_capacity=DESIRED_CAPACITY,
-    max_size=MAX_SIZE,
-    min_size=MIN_SIZE,
-    health_check_type="EC2",
-    vpc_zone_identifiers=subnet_ids,
-    launch_template=aws.autoscaling.GroupLaunchTemplateArgs(
-        id=launch_template.id,
-        version="$Latest",
-    ),
-    tags=[
-        aws.autoscaling.GroupTagArgs(
-            key=key,
-            value=value,
-            propagate_at_launch=True,
-        )
-        for key, value in {**TAGS, "Name": resource_name}.items()
-    ],
-    opts=pulumi.ResourceOptions(parent=launch_template),
-)
-
 vpn.register_outputs(
     {
-        "autoscaling_group_name": autoscaling_group.name,
+        "autoscaling_group_name": router_instances.autoscaling_group_name,
         "federated_identity_audience": identity.federated_identity.audience,
         "federated_identity_client_id": identity.federated_identity.id,
         "federated_identity_subject": identity.federated_identity.subject,
         "instance_profile_name": iam.instance_profile.name,
-        "launch_template_id": launch_template.id,
+        "launch_template_id": router_instances.launch_template_id,
         "security_group_id": security_group.id,
         "subnet_ids": subnet_ids,
         "vpc_id": vpc_id,
     }
 )
 
-pulumi.export("autoscaling_group_name", autoscaling_group.name)
+pulumi.export("autoscaling_group_name", router_instances.autoscaling_group_name)
 pulumi.export("federated_identity_audience", identity.federated_identity.audience)
 pulumi.export("federated_identity_client_id", identity.federated_identity.id)
 pulumi.export("federated_identity_subject", identity.federated_identity.subject)
 pulumi.export("instance_profile_name", iam.instance_profile.name)
-pulumi.export("launch_template_id", launch_template.id)
+pulumi.export("launch_template_id", router_instances.launch_template_id)
 pulumi.export("security_group_id", security_group.id)
 pulumi.export("subnet_ids", subnet_ids)
 pulumi.export("vpc_id", vpc_id)

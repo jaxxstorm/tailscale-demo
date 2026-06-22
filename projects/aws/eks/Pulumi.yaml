@@ -1,5 +1,5 @@
-name: demo-aws-vpc
-description: AWS VPC definition for demo environment
+name: demo-aws-eks
+description: EKS cluster for Tailscale demo
 runtime:
   name: python
   options:

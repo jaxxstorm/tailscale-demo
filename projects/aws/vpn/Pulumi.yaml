@@ -1,4 +1,4 @@
-name: lbrlabs-aws-vpn
+name: demo-aws-vpn
 description: Demo environment tailscale subnet routers for AWS
 runtime:
   name: python

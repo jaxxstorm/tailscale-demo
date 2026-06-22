@@ -1,0 +1,7 @@
+config:
+  aws:region: us-west-2
+  pulumi:resourcePrefix: lbr
+  demo-aws-eks:admin_role_name: AWSReservedSSO_Sandbox_2a30cfafeae961b0
+  demo-aws-eks:karpenter_version: "1.13.0"
+  tailscale:apiKey:
+    secure: AAABALEZPYeyHBGStEtUJ/rukriVtHquo42gBbj6fZ3e9OFFO30xmMPwWNKp0A99HMF5EozpHxf6zcYu9gKDf6NU0no99L8SxJUAl5vTLuhC2ceee6i7eqCSa3I=

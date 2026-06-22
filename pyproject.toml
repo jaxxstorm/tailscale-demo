@@ -3,13 +3,18 @@ name = "tailscale-demo"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
+    "lbrlabs-pulumi-eks>=1.8.1",
     "pulumi>=3.0.0,<4.0.0",
     "pulumi-aws>=7.0.0,<8.0.0",
     "pulumi-awsx>=3.6.0",
+    "pulumi-border0",
+    "pulumi-cloudinit>=1.6.0",
     "pulumi-cloudinit-tailscale",
+    "pulumi-kubernetes>=4.0.0,<5.0.0",
     "pulumi-tailscale",
 ]
 
 [tool.uv.sources]
+pulumi-border0 = { path = "projects/aws/connectors/sdks/border0" }
 pulumi-cloudinit-tailscale = { path = "projects/aws/vpn/sdks/cloudinit-tailscale" }
 pulumi-tailscale = { path = "projects/aws/vpn/sdks/tailscale" }
