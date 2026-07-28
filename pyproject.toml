@@ -12,6 +12,7 @@ dependencies = [
     "pulumi-cloudinit-tailscale",
     "pulumi-kubernetes>=4.0.0,<5.0.0",
     "pulumi-tailscale",
+    "pyyaml>=6.0.0",
 ]
 
 [tool.uv.sources]

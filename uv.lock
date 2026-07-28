@@ -500,6 +500,7 @@ dependencies = [
     { name = "pulumi-cloudinit-tailscale" },
     { name = "pulumi-kubernetes" },
     { name = "pulumi-tailscale" },
+    { name = "pyyaml" },
 ]
 
 [package.metadata]
@@ -513,6 +514,7 @@ requires-dist = [
     { name = "pulumi-cloudinit-tailscale", directory = "projects/aws/vpn/sdks/cloudinit-tailscale" },
     { name = "pulumi-kubernetes", specifier = ">=4.0.0,<5.0.0" },
     { name = "pulumi-tailscale", directory = "projects/aws/vpn/sdks/tailscale" },
+    { name = "pyyaml", specifier = ">=6.0.0" },
 ]
 
 [[package]]

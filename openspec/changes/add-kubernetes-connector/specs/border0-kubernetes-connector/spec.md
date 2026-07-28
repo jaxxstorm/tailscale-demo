@@ -17,11 +17,24 @@ namespace managed by the connectors project.
 - **WHEN** the connectors project installs the Tailzero connector chart
 - **THEN** the Helm release is installed into the `tailzero` namespace
 
-### Requirement: Tailzero invite code is secret config
-The Tailzero Kubernetes connector SHALL receive its invite code from Pulumi
-secret config.
+### Requirement: Tailzero connector uses provider-created token
+The Tailzero Kubernetes connector SHALL authenticate with a provider-created
+Border0 connector token and the connector's Tailscale auth key.
 
-#### Scenario: Invite code configured
+#### Scenario: Connector token configured
 - **WHEN** the Helm release is declared
-- **THEN** chart value `config.inviteCode` is populated from
-  `demo-aws-connectors:kubernetesInviteCode`
+- **THEN** chart value `config.token` is populated from a
+  `border0.ConnectorToken`
+- **AND** chart value `config.tsAuthKey` is populated from the Border0
+  connector's Tailscale auth key
+- **AND** chart value `config.inviteCode` is not set
+
+### Requirement: Border0 Kubernetes socket is declared
+The AWS connectors project SHALL declare a Border0 Kubernetes socket for the
+referenced EKS cluster and attach it to the in-cluster Tailzero connector.
+
+#### Scenario: Kubernetes socket configured
+- **WHEN** the Kubernetes connector resources are declared
+- **THEN** a `border0.Socket` with `socket_type` `kubernetes` is created
+- **AND** the socket is attached to the dedicated Kubernetes Border0 connector
+- **AND** the socket uses the in-cluster ServiceAccount CA and token paths

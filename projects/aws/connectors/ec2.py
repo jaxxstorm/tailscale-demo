@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
+import shlex
 import sys
 from pathlib import Path
-from typing import Sequence, cast
 
 import pulumi
 import pulumi_aws as aws
@@ -16,35 +16,53 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from components import AutoScalingEC2, AutoScalingEC2Args  # noqa: E402
 
+
 required_context = {
-    "ami_id": context.ami_id,
     "connectors": context.connectors,
-    "instance_type": context.instance_type,
-    "private_subnet_ids": context.private_subnet_ids,
-    "public_subnet_ids": context.public_subnet_ids,
     "region": context.region,
     "resource_name": context.resource_name,
     "stack": context.stack,
-    "target_subnet_id": context.target_subnet_id,
-    "vpc_id": context.vpc_id,
 }
 missing_context = [name for name, value in required_context.items() if value is None]
 if missing_context:
     raise RuntimeError(f"connectors context is missing: {', '.join(missing_context)}")
 
-resource_name = cast(str, context.resource_name)
-region = cast(str, context.region)
-stack = cast(str, context.stack)
-connectors = cast(pulumi.ComponentResource, context.connectors)
-ami_id = cast(pulumi.Input[str], context.ami_id)
-instance_type = cast(pulumi.Input[str], context.instance_type)
-public_subnet_ids = cast(
-    pulumi.Input[Sequence[pulumi.Input[str]]],
-    context.public_subnet_ids,
-)
-target_subnet_id = cast(pulumi.Input[str], context.target_subnet_id)
-vpc_id = cast(pulumi.Input[str], context.vpc_id)
-tags = cast(dict[str, pulumi.Input[str]], context.tags)
+assert context.resource_name is not None
+assert context.region is not None
+assert context.stack is not None
+assert context.connectors is not None
+
+resource_name = context.resource_name
+region = context.region
+stack = context.stack
+connectors = context.connectors
+config = pulumi.Config()
+vpc_stack_name = config.get("vpcStack", "lbrlabs/demo-aws-vpc/west")
+instance_type = config.get("instanceType", "t4g.nano")
+configured_ami_id = config.get("amiId")
+tailzero_hostname = config.get("tailzeroHostname", resource_name)
+vpc_stack = pulumi.StackReference(vpc_stack_name)
+vpc_id = vpc_stack.require_output("vpc_id")
+public_subnet_ids = vpc_stack.require_output("public_subnet_ids")
+private_subnet_ids = vpc_stack.require_output("private_subnet_ids")
+target_subnet_id = private_subnet_ids.apply(lambda ids: ids[0])
+tags = context.tags
+
+if configured_ami_id is None:
+    ami_id = aws.ec2.get_ami(
+        most_recent=True,
+        owners=["amazon"],
+        filters=[
+            aws.ec2.GetAmiFilterArgs(
+                name="name",
+                values=["al2023-ami-2023*-kernel-*-arm64"],
+            ),
+            aws.ec2.GetAmiFilterArgs(name="architecture", values=["arm64"]),
+            aws.ec2.GetAmiFilterArgs(name="virtualization-type", values=["hvm"]),
+        ],
+    ).id
+else:
+    ami_id = configured_ami_id
 
 connector = border0.Connector(
     resource_name,
@@ -53,6 +71,8 @@ connector = border0.Connector(
     name=resource_name,
     opts=pulumi.ResourceOptions(parent=connectors),
 )
+context.border0_connector_id = connector.id
+context.border0_connector_tailscale_auth_key = connector.tailscale_auth_key
 
 connector_token = border0.ConnectorToken(
     f"{resource_name}-token",
@@ -323,7 +343,7 @@ BORDER0_TOKEN={credentials[0]}
 CREDSEOF
 chmod 0600 /etc/border0/tailzero.env
 
-/usr/local/bin/tailzero install
+/usr/local/bin/tailzero install -connector-name={shlex.quote(tailzero_hostname)}
 """,
             content_type="text/x-shellscript",
             filename="tailzero-connector.sh",
@@ -376,6 +396,7 @@ context.ec2_outputs = {
     "launch_template_id": connector_instances.launch_template_id,
     "security_group_id": security_group.id,
     "subnet_ids": public_subnet_ids,
+    "tailzero_hostname": tailzero_hostname,
     "target_instance_id": target_instance.id,
     "target_instance_private_ip": target_instance.private_ip,
     "vpc_id": vpc_id,

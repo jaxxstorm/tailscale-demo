@@ -5,7 +5,7 @@ Border0 connector resources, EC2 targets, IAM policies, sockets, cloud-init, and
 exports in one file. The EKS project already exports `cluster_name` and
 `kubeconfig`, and the generated Border0 SDK supports Kubernetes sockets through
 `kubeconfig`. The Tailzero Kubernetes connector is installed through the
-`border0/tailzero-connector` Helm chart and requires an invite code.
+`tailzero-connector` Helm chart.
 
 The connectors project should grow to manage both EC2-oriented sockets and an
 EKS Kubernetes connector without making the entrypoint harder to reason about.
@@ -34,24 +34,25 @@ EKS Kubernetes connector without making the entrypoint harder to reason about.
   convention already used by other multi-file Pulumi projects and avoids passing
   a large argument object between modules.
 - Keep EC2 Border0 resources and Kubernetes Tailzero resources separate. The EC2
-  connector remains the runtime for EC2/S3/SSM sockets, while the Kubernetes
-  connector is installed in-cluster via Helm.
+  connector remains the runtime for EC2/S3/SSM sockets, while a dedicated
+  Kubernetes Border0 connector is installed in-cluster via Helm and receives the
+  EKS Kubernetes socket.
 - Reference the EKS stack from the connectors project using configurable
   `eksStack`, defaulting to `lbrlabs/demo-aws-eks/west`. This mirrors the
   existing `vpcStack` pattern and keeps stack wiring explicit.
 - Install the Helm release into a dedicated `tailzero` namespace. This follows
   the user's requirement to avoid the `default` namespace and keeps connector
   resources easy to inspect.
-- Configure the Helm release with `config.inviteCode` from secret Pulumi config
-  `demo-aws-connectors:kubernetesInviteCode`. The invite code must not be
-  hardcoded into source files.
+- Configure the Helm release with a provider-created Border0 connector token
+  and the dedicated Kubernetes connector's Tailscale auth key. No invite code
+  should be required for the Kubernetes connector.
 
 ## Risks / Trade-offs
 
 - The Tailzero chart repository must be pinned in code rather than relying on a
   preconfigured Helm alias. Mitigation: use
-  `https://borderzero.github.io/helm-charts` as the Helm repository URL and
-  `tailzero-connector` as the chart name.
+  `https://jaxxstorm.github.io/border0-helm-charts` as the Helm repository URL,
+  pin chart version `0.4.0`, and use `tailzero-connector` as the chart name.
 - Splitting an existing untracked connectors program can obscure exports if the
   modules do not expose outputs clearly. Mitigation: each module exports a
   dictionary of resource outputs for `__main__.py` to register and export.

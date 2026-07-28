@@ -8,11 +8,12 @@
 ## 2. Kubernetes Connector
 
 - [x] 2.1 Add `demo-aws-connectors:eksStack` config with default `lbrlabs/demo-aws-eks/west`.
-- [x] 2.2 Add `demo-aws-connectors:kubernetesInviteCode` secret config input for the Tailzero Helm chart.
+- [x] 2.2 Create a dedicated Border0 connector token for the Tailzero Helm chart.
 - [x] 2.3 Add `projects/aws/connectors/kubernetes.py` that reads the EKS stack via `pulumi.StackReference`.
 - [x] 2.4 Create a Kubernetes provider from the referenced EKS stack's `kubeconfig` output.
 - [x] 2.5 Create a dedicated `tailzero` namespace.
-- [x] 2.6 Install the `tailzero-connector` Helm chart from `https://borderzero.github.io/helm-charts` as `tailzero-connector` with `config.inviteCode` set from secret config.
+- [x] 2.6 Install the `tailzero-connector` Helm chart from `https://jaxxstorm.github.io/border0-helm-charts` as `tailzero-connector` with `config.token` and `config.tsAuthKey` set from provider-created credentials.
+- [x] 2.7 Create a Border0 Kubernetes socket attached to the dedicated Kubernetes connector.
 
 ## 3. IAM and Outputs
 
@@ -24,4 +25,4 @@
 - [x] 4.1 Run Python compile validation for `projects/aws/connectors/__main__.py`, `ec2.py`, `kubernetes.py`, and `context.py`.
 - [x] 4.2 Run an import smoke check for Pulumi Kubernetes Helm release types.
 - [x] 4.3 Run OpenSpec validation for `add-kubernetes-connector`.
-- [ ] 4.4 Run `pulumi preview` when the target stack, Border0 provider credentials, and Kubernetes invite code are available.
+- [ ] 4.4 Run `pulumi preview` when the target stack and Border0 provider credentials are available.
